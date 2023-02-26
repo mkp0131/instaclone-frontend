@@ -1,35 +1,35 @@
+import { darkModeVar, isLoggedInVar } from "apollo";
 import { useReactiveVar } from "@apollo/client";
-import { isDarkModeVar, isLoggedInVar } from "apollo";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { darkTheme, lightTheme, GlobalStyles } from "styles";
+import { ThemeProvider } from "styled-components";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "screens/Home";
 import Login from "screens/Login";
-import { ThemeProvider } from "styled-components";
-import GlobalStyle from "styles/GlobalStyle";
-import { darkTheme, lightTheme } from "styles/theme";
+import SignUp from "screens/SignUp";
+import routes from "routes";
+import { HelmetProvider } from "react-helmet-async";
 
 function App() {
   const isLoggedIn = useReactiveVar(isLoggedInVar);
-  const isDarkMode = useReactiveVar(isDarkModeVar);
-
-  const toggleDarkMode = () => {
-    isDarkModeVar(!isDarkMode);
-  };
+  const darkMode = useReactiveVar(darkModeVar);
 
   return (
-    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
-      <GlobalStyle />
-      <button onClick={toggleDarkMode}>다크모드 토글</button>
-      <BrowserRouter basename={process.env.PUBLIC_URL}>
-        <Routes>
-          <Route path="/" element={isLoggedIn ? <Home /> : <Login />} />
-          {/* <Route path="/:coinId" element={<Coin />}>
-          <Route path="chart" element={<Chart />} />
-          <Route path="price" element={<Price />} />
-        </Route>*/}
-          <Route path="/*" element={<Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
+        <GlobalStyles />
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path={routes.home}
+              element={isLoggedIn ? <Home /> : <Login />}
+            />
+            {!isLoggedIn ? (
+              <Route path={routes.signUp} element={<SignUp />} />
+            ) : null}
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

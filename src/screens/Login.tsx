@@ -1,24 +1,51 @@
-import { isLoggedInVar } from "apollo";
+import {
+  faFacebookSquare,
+  faInstagram,
+} from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import PageTitle from "components/PageTitle";
 import styled from "styled-components";
+import AuthLayout from "../components/auth/AuthLayout";
+import BottomBox from "../components/auth/BottomBox";
+import Button from "../components/auth/Button";
+import FormBox from "../components/auth/FormBox";
+import Input from "../components/auth/Input";
+import Separator from "../components/auth/Separator";
+import routes from "../routes";
 
-interface IContainer {
-  float: boolean;
-}
-
-const Container = styled.div<IContainer>`
-  width: 300px;
-  height: 300px;
-  background: red;
+const FacebookLogin = styled.div`
+  color: #385285;
+  span {
+    margin-left: 10px;
+    font-weight: 600;
+  }
 `;
 
-const Login = () => {
+function Login() {
   return (
-    <>
-      <h1>Login</h1>
-      <button onClick={() => isLoggedInVar(true)}>로그인 가자!</button>
-      <Container float={true} />
-    </>
+    <AuthLayout>
+      <PageTitle title="Login" />
+      <FormBox>
+        <div>
+          <FontAwesomeIcon icon={faInstagram} size="3x" />
+        </div>
+        <form>
+          <Input type="text" placeholder="Username" />
+          <Input type="password" placeholder="Password" />
+          <Button type="submit" value="Log in" />
+        </form>
+        <Separator />
+        <FacebookLogin>
+          <FontAwesomeIcon icon={faFacebookSquare} />
+          <span>Log in with Facebook</span>
+        </FacebookLogin>
+      </FormBox>
+      <BottomBox
+        cta="Don't have an account?"
+        linkText="Sign up"
+        link={routes.signUp}
+      />
+    </AuthLayout>
   );
-};
-
+}
 export default Login;
