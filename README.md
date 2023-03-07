@@ -145,7 +145,7 @@ function App() {
 }
 ```
 
-#### login 쿼리 보내기
+#### login Mutation 보내기
 
 - gql 생성
 
@@ -190,4 +190,35 @@ const onSubmitValid = (data: IForm) => {
     },
   });
 };
+```
+
+### query 보내기
+
+```tsx
+const ME_QUERY = gql`
+  query Me {
+    me {
+      username
+      avatar
+    }
+  }
+`;
+
+function useUser() {
+  const isLoggedIn = useReactiveVar(isLoggedInVar);
+  const { data, error } = useQuery<Me>(ME_QUERY, {
+    skip: !isLoggedIn,
+  });
+```
+
+## [react] apollo query 조건 if skip
+
+- `skip` 속성을 활용하여 쿼리를 조건을 걸고 보낸다.
+- `skip` 을 할 경우에는 데이터가 `null` 이 된다.
+
+```tsx
+const isLoggedIn = useReactiveVar(isLoggedInVar);
+const { data, error } = useQuery(ME_QUERY, {
+  skip: !isLoggedIn,
+});
 ```
