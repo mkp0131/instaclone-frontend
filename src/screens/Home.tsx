@@ -1,10 +1,13 @@
-import { isLoggedInVar } from "../apollo";
+import { useNavigate } from "react-router-dom";
+import { logUserOut } from "../apollo";
 
 function Home() {
+  const navigate = useNavigate();
+
   return (
     <div>
       <h1>Home</h1>
-      <button onClick={() => isLoggedInVar(false)}>Log out now!</button>
+      <button onClick={() => logUserOut(navigate)}>Log out now!</button>
     </div>
   );
 }

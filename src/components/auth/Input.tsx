@@ -5,6 +5,7 @@ interface IProps {
   type: string;
   placeholder: string;
   hasError?: boolean;
+  onFocus?: () => void;
 }
 
 const SInput = styled.input<IProps>`

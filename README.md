@@ -1,6 +1,6 @@
 # 인스타 클론 프론트엔드 리액트 타입스크립트
 
-## [react] 리액트 전역 상태 관리 apollo Reactive Variables
+## [react] 리액트 전역 상태(state) 관리 apollo Reactive Variables
 
 reactive variables는 Apollo Client 캐시 외부의 local state를 나타내는 유용한 메커니즘입니다. 캐시와 분리되어 있기 때문에 reactive variables는 모든 유형과 구조의 데이터를 저장할 수 있으며 GraphQL 구문을 사용하지 않고도 애플리케이션의 어느 곳에서나 상호 작용할 수 있습니다. 가장 중요한 것은 reactive variable를 수정하면 해당 변수에 의존하는 모든 활성 쿼리의 업데이트가 트리거된다는 것입니다.
 
@@ -53,4 +53,141 @@ const Login = () => {
 export default Login;
 ```
 
-## [react] styled-components props 사용
+---
+
+## 여기 까지 작성
+
+---
+
+## [react] apollo client 사용 graphql 리액트 사용
+
+### 참고사항
+
+- 브라우저에 apollo dev tool 을 설치한다.
+  > https://chrome.google.com/webstore/detail/apollo-client-devtools/jdkknkkbebbapilgoeccciglkfbmbnfm/related?hl=ko&gl=KR
+- dev tool 에서 쿼리를 가져오지 못할경우, 브라우저를 아에 종료후 재시작 한다.
+
+### 타입스크립트 적용
+
+- 아래 방법은 추후 apollo CLI 패키지가 올라가면 사용못한다함.
+  => https://www.graphql-code-generator.com/docs/getting-started
+  => 막히면 이 패키지를 연구해 보도록 하자!
+
+- `apollo` 패키지를 전역으로 설치한다.
+
+```
+npm i -g apollo
+ npm install -g graphql
+```
+
+- `apollo.config.js` 파일을 생성
+
+```js
+module.exports = {
+  client: {
+    includes: ["./src/**/*.{tsx,ts}"],
+    tagName: "gql",
+    service: {
+      name: "instaclone-backend",
+      url: "http://localhost:4444/graphql",
+    },
+  },
+};
+```
+
+- 명령어 실행
+
+```
+apollo client:codegen src/__generated__ --target=typescript --outputFlat
+```
+
+- `src/__generated__` 폴더에 리액트에 있는 `gql` 함수의 타입이 생선된다.
+
+### 사용
+
+- `apollo.ts` 파일 생성 client 인스턴스 생성
+
+```ts
+export const client = new ApolloClient({
+  uri: "http://localhost:4444/graphql",
+  cache: new InMemoryCache(),
+  connectToDevTools: true,
+});
+```
+
+- `App.tsx` 에 <ApolloProvider> 세팅 / 생성한 client 를 넣어준다.
+
+```ts
+function App() {
+  const isLoggedIn = useReactiveVar(isLoggedInVar);
+  const darkMode = useReactiveVar(darkModeVar);
+
+  return (
+    <ApolloProvider client={client}>
+      <HelmetProvider>
+        <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
+          <GlobalStyles />
+          <BrowserRouter>
+            <Routes>
+              <Route
+                path={routes.home}
+                element={isLoggedIn ? <Home /> : <Login />}
+              />
+              {!isLoggedIn ? (
+                <Route path={routes.signUp} element={<SignUp />} />
+              ) : null}
+            </Routes>
+          </BrowserRouter>
+        </ThemeProvider>
+      </HelmetProvider>
+    </ApolloProvider>
+  );
+}
+```
+
+#### login 쿼리 보내기
+
+- gql 생성
+
+```ts
+const LOGIN_MUTATION = gql`
+  mutation Login($username: String!, $password: String!) {
+    login(username: $username, password: $password) {
+      token
+      ok
+      error
+    }
+  }
+`;
+```
+
+```ts
+// graphql 쿼리 인스턴스 생성
+const [login, { loading }] = useMutation<Login, LoginVariables>(
+  LOGIN_MUTATION,
+  {
+    // 완료된 후 콜백
+    onCompleted: (data) => {
+      const {
+        login: { ok, error, token },
+      } = data;
+
+      if (!ok) {
+        setError("result", {
+          message: error + "",
+        });
+      }
+    },
+  }
+);
+
+const onSubmitValid = (data: IForm) => {
+  // graphql 쿼리 전송
+  login({
+    variables: {
+      username: data.username,
+      password: data.password,
+    },
+  });
+};
+```
