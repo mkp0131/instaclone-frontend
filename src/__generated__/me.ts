@@ -9,8 +9,8 @@
 
 export interface Me_me {
   __typename: "User";
-  id: number;
   username: string;
+  avatar: string | null;
 }
 
 export interface Me {

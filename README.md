@@ -222,3 +222,30 @@ const { data, error } = useQuery(ME_QUERY, {
   skip: !isLoggedIn,
 });
 ```
+
+## [react] apollo client http header 추가 토큰
+
+- `createHttpLink` 로 `httpLink` 생성
+- `setContext` 로 `authLink` 생성
+- `ApolloClient` 인스턴스 생성시 옵션으로 부여
+
+```ts
+const httpLink = createHttpLink({
+  uri: "http://localhost:4444/graphql",
+});
+
+const authLink = setContext((_, { headers }) => {
+  return {
+    headers: {
+      ...headers,
+      token: localStorage.getItem(TOKEN),
+    },
+  };
+});
+
+export const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  connectToDevTools: true,
+  link: authLink.concat(httpLink),
+});
+```
