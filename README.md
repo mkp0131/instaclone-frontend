@@ -249,3 +249,108 @@ export const client = new ApolloClient({
   link: authLink.concat(httpLink),
 });
 ```
+
+## [react] apollo useMutation 후 refetch
+
+### update
+
+- `useMutation` 의 `update` 옵션으로 다른 쿼리를 리패치 할 수 있다.
+
+```ts
+const [toggleLikeMutation, { loading }] = useMutation(TOGGLE_LIKE_MUTATION, {
+  variables: {
+    id,
+  },
+  // 쿼리가 끝난후 실행되는 콜백
+  update: (cache, result) => {
+    const {
+      data: {
+        toggleLike: { ok },
+      },
+    } = result;
+
+    // 쿼리가 잘 전동되었는지 확인
+    if (ok) {
+      // 캐시를 업데이트
+      cache.writeFragment({
+        // 캐시 아이디
+        id: `Photo:${id}`,
+        // fragment 아무이름 on 타입
+        fragment: gql`
+          fragment BSName on Photo {
+            isLiked
+          }
+        `,
+        data: {
+          isLiked: !isLiked,
+        },
+      });
+    }
+  },
+});
+```
+
+#### readFragment 사용
+
+- **컴포넌트에 기존 캐시된 정보가 없을 경우 사용한다.**
+
+```ts
+const [toggleLikeMutation, { loading }] = useMutation(TOGGLE_LIKE_MUTATION, {
+  variables: {
+    id,
+  },
+  // 쿼리가 끝난후 실행되는 콜백
+  update: (cache, result) => {
+    const {
+      data: {
+        toggleLike: { ok },
+      },
+    } = result;
+
+    // 쿼리가 잘 전동되었는지 확인
+    if (ok) {
+      const fragmentId = `Photo:${id}`;
+      const fragment = gql`
+        fragment BSName on Photo {
+          isLiked
+          likes
+        }
+      `;
+      // 캐시에서 데이터 가져오기
+      const cacheData: Partial<seeFeed_seeFeed> | null = cache.readFragment({
+        id: fragmentId,
+        fragment,
+      });
+
+      if (cacheData && "isLiked" in cacheData && "likes" in cacheData) {
+        const { isLiked: cacheIsLiked, likes: cacheLikes } = cacheData;
+        // 캐시를 업데이트
+        cache.writeFragment({
+          // 캐시 아이디
+          id: fragmentId,
+          // fragment 아무이름 on 타입
+          fragment,
+          data: {
+            isLiked: !cacheIsLiked,
+            likes: cacheIsLiked ? cacheLikes! - 1 : cacheLikes! + 1,
+          },
+        });
+      }
+    }
+  },
+});
+```
+
+### refetchQueries
+
+- `useMutation` 의 `refetchQueries` 옵션으로 다른 쿼리를 리패치 할 수 있다.
+- 모든 쿼리가 업데이트 되기 때문에 **비추천**
+
+```ts
+const [toggleLikeMutation, { loading }] = useMutation(TOGGLE_LIKE_MUTATION, {
+  variables: {
+    id,
+  },
+  refetchQueries: [FEED_QUERY],
+});
+```

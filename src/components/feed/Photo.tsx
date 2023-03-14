@@ -8,7 +8,9 @@ import {
 import { faHeart as SolidHeart } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import PropTypes from "prop-types";
+import { FEED_QUERY } from "screens/Home";
 import styled from "styled-components";
+import { seeFeed_seeFeed } from "__generated__/seeFeed";
 import Avatar from "../Avatar";
 import { FatText } from "../shared";
 
@@ -86,6 +88,45 @@ function Photo({ id, user, file, isLiked, likes }: IProps) {
   const [toggleLikeMutation, { loading }] = useMutation(TOGGLE_LIKE_MUTATION, {
     variables: {
       id,
+    },
+    // 쿼리가 끝난후 실행되는 콜백
+    update: (cache, result) => {
+      const {
+        data: {
+          toggleLike: { ok },
+        },
+      } = result;
+
+      // 쿼리가 잘 전동되었는지 확인
+      if (ok) {
+        const fragmentId = `Photo:${id}`;
+        const fragment = gql`
+          fragment BSName on Photo {
+            isLiked
+            likes
+          }
+        `;
+        // 캐시에서 데이터 가져오기
+        const cacheData: Partial<seeFeed_seeFeed> | null = cache.readFragment({
+          id: fragmentId,
+          fragment,
+        });
+
+        if (cacheData && "isLiked" in cacheData && "likes" in cacheData) {
+          const { isLiked: cacheIsLiked, likes: cacheLikes } = cacheData;
+          // 캐시를 업데이트
+          cache.writeFragment({
+            // 캐시 아이디
+            id: fragmentId,
+            // fragment 아무이름 on 타입
+            fragment,
+            data: {
+              isLiked: !cacheIsLiked,
+              likes: cacheIsLiked ? cacheLikes! - 1 : cacheLikes! + 1,
+            },
+          });
+        }
+      }
     },
   });
   return (
